@@ -1,21 +1,37 @@
 import java.awt.*;
 import java.awt.event.*;
-
+import java.util.List;
+import java.util.ArrayList;
 public class TankClient extends Frame{
 	
 	public static final int GAME_WIDTH=1000;
 	public static final int GAME_HEIGHT=800;
 	
-	Tank myTank=new Tank(50,50,this);
-	Missile m=null;
+	Tank myTank=new Tank(50,50,true,this);
+	
+	Tank enemyTank=new Tank(200,200,false,this);//画出敌方坦克
+	
+	Explode e=new Explode(80,80,this);  
+	List<Missile>missiles=new ArrayList<Missile>();
 	
 	Image offScreenImage=null;
 	
 	public Object VK_LEFT;
-	
+	 
 	public void paint(Graphics g) {
-		if(m!=null)m.draw(g);
+		
+		g.drawString("missiles count:"+missiles.size(), 400, 60);
+		
+		
+		for(int i=0;i<missiles.size();i++) {
+			Missile m=missiles.get(i);
+			//if(!m.isLive())missiles.remove(m);
+			m.draw(g);
+			m.hitTank(enemyTank);
+		}
+		e.draw(g);
 		myTank.draw(g);
+		enemyTank.draw(g);//调用并画出敌方坦克
 	}
 	
 	
@@ -25,7 +41,7 @@ public class TankClient extends Frame{
 		}
 		Graphics gOffScreen=offScreenImage.getGraphics();
 		Color c=gOffScreen.getColor();
-		gOffScreen.setColor(Color.BLACK);
+		gOffScreen.setColor(Color.BLACK);//背景颜色
 		gOffScreen.fillRect(0,0,1000,800);
 		gOffScreen.setColor(c);
 		paint(gOffScreen);
@@ -58,8 +74,6 @@ public class TankClient extends Frame{
 		TankClient tc=new TankClient();
 		tc.lanuchFrame();
 	}
-
-
 	
 	
 	//线程类
@@ -68,7 +82,7 @@ public class TankClient extends Frame{
 			while(true) {
 				repaint();
 				try {
-					Thread.sleep(100);//每100画一次
+					Thread.sleep(150);//每100画一次
 				} catch(InterruptedException e) {
 					e.printStackTrace();
 				}
