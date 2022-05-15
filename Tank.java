@@ -2,6 +2,7 @@ import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Rectangle;
 import java.awt.event.*;
+import java.util.*;
 
 public class Tank{
 	public static final int XSPEED=10;
@@ -24,37 +25,54 @@ public class Tank{
 	
 	private boolean good;
 	
+	public boolean isGood() {
+		return good;
+	}
 	private int x,y;
 	
+	private static Random r=new Random();//随机数产生  每个坦克都用
+	
 	private boolean bL=false,bU=false,bR=false,bD=false;
-	enum Direction{L,LU,U,RU,R,RD,D,LD,STOP};
+	enum Direction{L,LU,U,RU,R,RD,D,LD,STOP};//枚举方向
 	
 	//子弹方向
 	private Direction dir=Direction.STOP;
 	
 	//炮筒方向
-	private Direction ptDir=Direction.D;	
+	private Direction ptDir=Direction.D;
+	
+	private int step=r.nextInt(12)+3;//最小值移动3步最大移动12步
 	
 	
 	public Tank(int x,int y,boolean good) {
+		  this.x=x;
+		  this.y=y;
+		  this.good=good;
+		
 
-		this.x=x;
-		this.y=y;
-		this.good=good;
+		
 	}
  	   
-     public Tank(int x,int y,boolean good,TankClient tc) {
+     public Tank(int x,int y,boolean good,Direction dir,TankClient tc) {
 	    	this(x,y,good);
+	    	this.dir=dir;
 	    	this.tc=tc;
 	    }
  	    
 	public void draw(Graphics g) {
-		    if(!live)return ;//若坦克被打中，则不必再画坦克
+		    if(!live){//若坦克被打中，则不必再画坦克
+		             if(!good) {
+		    	        tc.tanks.remove(this);
+		       }
+		       return;
+		    }
+		    
+		    
 			Color c=g.getColor();
-			if(good) g.setColor(Color.WHITE);//自己控制的坦克
+			if(good) g.setColor(Color.RED);//自己控制的坦克
 			else g.setColor(Color.BLUE);
 			//敌方坦克的颜色
-			//g.setColor(Color.RED);
+			//g.setColor(Color.BLUE);//自己坦克颜色
 			g.fillOval(x,y, WIDTH, HEIGHT);
 			g.setColor(c);	
 			switch(ptDir) {
@@ -129,6 +147,21 @@ public class Tank{
 			//出墙位置
 			if(x+Tank.WIDTH>TankClient.GAME_WIDTH) x=TankClient.GAME_WIDTH-Tank.WIDTH;
 	        if(y+Tank.HEIGHT>TankClient.GAME_HEIGHT)y=TankClient.GAME_HEIGHT-Tank.HEIGHT; 	
+		
+		    if(!good) {//坏坦克每走一步随机产生一个方向
+		    	Direction[] dirs=Direction.values(); //转换成一个数组
+		    	if(step==0) {
+		    		step=r.nextInt(12)+3;
+		    		int rn=r.nextInt(dirs.length);//若当前是七，随机产生一个0~6的数
+			    	dir=dirs[rn];//随机从0~6取一个选择方向
+		    	}
+		    	
+		    	
+		    	step --;//每移动一次减一
+		    	if(r.nextInt(20)>10)this.fire();
+		    }
+		
+		
 		}
 		public void Keypressed(KeyEvent e) {
 			int key=e.getKeyCode();
@@ -185,9 +218,10 @@ public class Tank{
 		  locateDirection();
 		}
 		public  Missile fire() {
+			if(!live)return null; 
 			int y=this.y+Tank.HEIGHT/2-Missile.HEIGHT/2;
 			int x=this.x+Tank.WIDTH/2-Missile.WIDTH/2;
-		   Missile m=new Missile(x,y,ptDir,this.tc );
+		   Missile m=new Missile(x,y,good,ptDir,this.tc );
 		   tc.missiles.add(m);
 		   return m;
 		}

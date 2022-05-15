@@ -1,5 +1,5 @@
 import java.awt.*;
-
+import java.util.List;
 public class Missile {
 	
 	public static final int XSPEED=20;
@@ -11,6 +11,8 @@ public class Missile {
 	
 	int x,y;
     Tank.Direction dir;
+    
+    private boolean good;
  
     private boolean Live=true;
 	  
@@ -19,35 +21,36 @@ public class Missile {
 	 
     private TankClient tc;
 
-	public Missile(int x, int y, Tank.Direction dir) {
-		this.x = x;
-		this.y = y;
-		this.dir = dir;
-	}
+    public Missile(int x,int y,Tank.Direction dir) {
+    	this.x=x;
+    	this.y=y;
+    	this.dir=dir;
+    }
     
-    public Missile (int x,int y,Tank.Direction dir,TankClient tc) {
-    	this(x,y,dir);
-    	this.tc=tc;
+    public Missile (int x,int y,boolean good,Tank.Direction dir,TankClient tc) {
+    	     this(x,y,dir);
+    	    this.tc=tc;
+    	    this.good=good; 
     }
 	
 	
 	public void draw(Graphics g) {
-		
 		//在画坦克之前判断坦克是否存在
 		if(!live) {
 			tc.missiles.remove(this);
+			
 			return;
 		}
 		
 		Color c=g.getColor();
-		g.setColor(Color.RED);
+		g.setColor(Color.BLACK);//子弹的颜色
 		g.fillOval(x, y, WIDTH, HEIGHT);
 		g.setColor(c);
 		
 		
 		move();
 	}
-    
+     
     private void move() {
     	
     	switch(dir) {
@@ -100,11 +103,21 @@ public class Missile {
     }
     
     public boolean hitTank(Tank t) {//如果拿到包装到子弹外围的放块调用Rectangle
-    	if(this.getRect().intersects(t.getRect())&&t.isLive()) {//保证自己坦克活着
+    	if(this.live&&this.getRect().intersects(t.getRect())&&t.isLive()&&this.good!=t.isGood()) {//保证自己坦克活着
         t.setLive(false);//检验是否被打掉
         this.live=false;
+        Explode e=new Explode(x,y,tc);//子弹的，x，y
+        tc.explode.add(e);
     	return true;//如果交上返回true
-    	}//负责返回else
+    	}//否则返回false
+    	return false;
+    }
+    public boolean hitTanks(List<Tank> tanks) {
+    	for(int i=0;i<tanks.size();i++) {
+    		if(hitTank(tanks.get(i))) {
+    			return true;
+    		}
+    	}
     	return false;
     }
      

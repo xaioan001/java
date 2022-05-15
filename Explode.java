@@ -4,7 +4,7 @@ public class Explode {
     private boolean live=true;
     
     private TankClient tc;
-    int []diameter= {5,7,10,20,30,45,50,30,20,10,3,};
+    int []diameter= {5,7,10,20,30,20,10,3,};
     int step=0;
     
     public Explode(int x,int y,TankClient tc) {
@@ -24,7 +24,7 @@ public class Explode {
     	   return ;
        }
        Color c=g.getColor();
-       g.setColor(Color.ORANGE);
+       g.setColor(Color.black);//±¬Õ¨ÆøÅÝÐ§¹û
        g.fillOval( x, y,diameter[step],diameter[step]);
        g.setColor(c);
        step++;
