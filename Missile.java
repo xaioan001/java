@@ -1,7 +1,7 @@
 import java.awt.*;
 import java.util.List;
 public class Missile {
-	
+//ziadanlei
 	public static final int XSPEED=20;
 	public static final int YSPEED=20;
 	
@@ -104,11 +104,17 @@ public class Missile {
     
     public boolean hitTank(Tank t) {//如果拿到包装到子弹外围的放块调用Rectangle
     	if(this.live&&this.getRect().intersects(t.getRect())&&t.isLive()&&this.good!=t.isGood()) {//保证自己坦克活着
-        t.setLive(false);//检验是否被打掉
-        this.live=false;
-        Explode e=new Explode(x,y,tc);//子弹的，x，y
-        tc.explode.add(e);
-    	return true;//如果交上返回true
+           if(t.isGood()) {//如果是好坦克
+        	   t.setLife(t.getLife() - 20);//改生命值
+        	   if(t.getLife()<=0) t.setLive(false);
+              }	
+           else {
+        	   t.setLive(false);//检验是否被打掉
+           }
+           this.live=false;
+           Explode e=new Explode(x,y,tc);//子弹的，x，y
+           tc.explode.add(e);
+    	   return true;//如果交上返回true
     	}//否则返回false
     	return false;
     }
@@ -117,6 +123,13 @@ public class Missile {
     		if(hitTank(tanks.get(i))) {
     			return true;
     		}
+    	}
+    	return false;
+    }
+    public boolean hitWall(Wall w) {//子弹撞墙
+    	if(this.live&&this.getRect().intersects(w.getRect())) {
+    		this.live=false;//子弹撞上墙消失
+    		return true;
     	}
     	return false;
     }

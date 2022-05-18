@@ -13,11 +13,28 @@ public class Tank{
 	
 	public boolean live=true;//定义坦克的死活
 	
+	private BloodBar bb=new BloodBar();
 	
+	private int life=100;
+	
+ 	public int getLife() {
+		return life;
+	}
+
+
+
+	public void setLife(int life) {
+		this.life = life;
+	}
+
+
+
 	public boolean isLive() {
 		return live;
 	}
 
+	
+	
 	public void setLive(boolean live) {
 		this.live = live;
 	}
@@ -29,6 +46,7 @@ public class Tank{
 		return good;
 	}
 	private int x,y;
+	private int oldX,oldY;
 	
 	private static Random r=new Random();//随机数产生  每个坦克都用
 	
@@ -47,6 +65,8 @@ public class Tank{
 	public Tank(int x,int y,boolean good) {
 		  this.x=x;
 		  this.y=y;
+		  this.oldX=x;
+		  this.oldY=y;
 		  this.good=good;
 		
 
@@ -75,6 +95,8 @@ public class Tank{
 			//g.setColor(Color.BLUE);//自己坦克颜色
 			g.fillOval(x,y, WIDTH, HEIGHT);
 			g.setColor(c);	
+			
+			bb.draw(g);
 			switch(ptDir) {
 			case L:                //中心
 				g.drawLine(x+Tank.WIDTH/2, y+Tank.HEIGHT/2, x, y+Tank.HEIGHT/2);
@@ -106,6 +128,12 @@ public class Tank{
 		}
 		
 		void move() {
+			
+			
+			
+			  this.oldX=x;//记录坦克上一部位置
+			  this.oldY=y;
+			
 			switch(dir) {
 			case L:                //向左
 				x-=XSPEED;
@@ -160,12 +188,25 @@ public class Tank{
 		    	step --;//每移动一次减一
 		    	if(r.nextInt(20)>10)this.fire();
 		    }
+		 
+		    
+		    
+		}
 		
-		
+		 
+		private void stay() {
+			x=oldX;
+			y=oldY;
 		}
 		public void Keypressed(KeyEvent e) {
 			int key=e.getKeyCode();
 		     switch(key){
+		    case KeyEvent.VK_F2:
+		    	if(this.live) {
+		    		this.live=true;
+		    		this.life=100;
+		    	}
+		    	break;
 			case KeyEvent.VK_LEFT:
 			       bL=true;
 			       break;
@@ -214,6 +255,9 @@ public class Tank{
 			  case KeyEvent.VK_DOWN:
                   bD=false;
 			       break;
+			  case KeyEvent.VK_A:
+			        superFire();
+			        break;
 			}
 		  locateDirection();
 		}
@@ -225,10 +269,64 @@ public class Tank{
 		   tc.missiles.add(m);
 		   return m;
 		}
+		public Missile fire(Direction dir){//写一个fire方法
+			if(!live)return null; 
+			int y=this.y+Tank.HEIGHT/2-Missile.HEIGHT/2;
+			int x=this.x+Tank.WIDTH/2-Missile.WIDTH/2;
+		   Missile m=new Missile(x,y,good,dir,this.tc );
+		   tc.missiles.add(m);
+		   return m; 
+		
+		}
 		 public Rectangle getRect( ) {
 		    	return new Rectangle(x,y,WIDTH,HEIGHT);
 		    }
-	
+		public boolean collidesWithWall(Wall w) {
+			if(this.live&&this.getRect().intersects(w.getRect())) {
+	    		this.stay();
+	    		return true;
+	    	}
+	    	return false;
+		}
+		 
+	    public boolean collidesWithTanks(java.util.List<Tank> tanks) {
+	    	for(int i=0;i<tanks.size();i++) {
+	    		Tank t=tanks.get(i);
+	    		if(this!=t) {
+	    			if(this.live && t.isLive()&&this.getRect().intersects(t.getRect())) {
+	    	    		this.stay();
+	    	    		t.stay();
+	    	    		return true;
+	    		}
+	    	}
+	    }
+	    	return false;
+	 }
+	    private void superFire() {
+	    	Direction[] dirs=Direction.values(); 
+	    	for(int i=0;i<8;i++){//8个方向
+	    	    tc.missiles.add(fire(dirs[i]));
+	    	}
+	    		
+	    }
+	   private class BloodBar{
+		   public void draw(Graphics g){
+ 	         Color c =g.getColor();
+		         g.setColor(Color.RED);
+		       g.drawRect(x,y-20,WIDTH,20);//血条的长宽高
+			  int w=WIDTH*life/100;//宽度
+			  g.fillRect(x, y-20,w,20);
+			  g.setColor(c);
+		   }
+	   }
+      public boolean eat(Blood b) {
+    	  if(this.live&&b.isLive()&&this.getRect().intersects(b.getRect())){
+      		this.life=20;//吃了就加1/5血
+      		b.setLive(false);
+      		return true;
+      	}
+      	return false;
+      }
 }
  
 
